@@ -18,6 +18,11 @@ if (count($images) !== 3) {
     exit;
 }
 
+if (!file_exists($frame)) {
+    echo json_encode(["status"=>"error","message"=>"Frame not found"]);
+    exit;
+}
+
 if (!is_dir($temp)) mkdir($temp,0777,true);
 if (!is_dir($result)) mkdir($result,0777,true);
 
@@ -36,47 +41,72 @@ $img1 = imagecreatefrompng($paths[0]);
 $img2 = imagecreatefrompng($paths[1]);
 $img3 = imagecreatefrompng($paths[2]);
 
-$w = imagesx($img1);
-$h = imagesy($img1);
+// ==== LOAD FRAME (ACUAN UKURAN) ====
+$frameImg = imagecreatefrompng($frame);
+$frameW = imagesx($frameImg);
+$frameH = imagesy($frameImg);
 
-// ==== CANVAS ====
-$headerH = 120;
-$footerH = 120;
-$finalH  = ($h*3) + $headerH + $footerH;
+// ==== AREA FOTO (SESUAIKAN DENGAN FIGMA) ====
+$photoX = 100;
+$photoY = 200;
+$photoW = $frameW - 200;
+$photoH = ($frameH - 400) / 3;
 
-$final = imagecreatetruecolor($w, $finalH);
+// ==== CANVAS FINAL ====
+$final = imagecreatetruecolor($frameW, $frameH);
 $white = imagecolorallocate($final,255,255,255);
 imagefill($final,0,0,$white);
 
-// ==== TEXT ====
+// ==== TEXT SETUP ====
 $textColor = imagecolorallocate($final,0,0,0);
 $font = __DIR__."/assets/arial.ttf";
 
-// header
+// ==== HEADER TEXT ====
 if (file_exists($font)) {
-    imagettftext($final, 28, 0, 40, 70, $textColor, $font, $title);
+    imagettftext($final, 36, 0, $photoX, 120, $textColor, $font, $title);
 }
 
-// ==== PHOTOS ====
-imagecopy($final,$img1,0,$headerH,0,0,$w,$h);
-imagecopy($final,$img2,0,$headerH+$h,0,0,$w,$h);
-imagecopy($final,$img3,0,$headerH+$h*2,0,0,$w,$h);
+// ==== COPY & RESIZE FOTO ====
+imagecopyresampled($final, $img1,
+    $photoX, $photoY,
+    0, 0,
+    $photoW, $photoH,
+    imagesx($img1), imagesy($img1)
+);
 
-// footer
+imagecopyresampled($final, $img2,
+    $photoX, $photoY + $photoH,
+    0, 0,
+    $photoW, $photoH,
+    imagesx($img2), imagesy($img2)
+);
+
+imagecopyresampled($final, $img3,
+    $photoX, $photoY + ($photoH * 2),
+    0, 0,
+    $photoW, $photoH,
+    imagesx($img3), imagesy($img3)
+);
+
+// ==== FOOTER TEXT ====
 if (file_exists($font)) {
-    imagettftext($final, 18, 0, 40, $finalH-60, $textColor, $font, $date);
-    imagettftext($final, 18, 0, 40, $finalH-30, $textColor, $font, $footer);
+    imagettftext($final, 22, 0, $photoX, $frameH - 80, $textColor, $font, $date);
+    imagettftext($final, 22, 0, $photoX, $frameH - 40, $textColor, $font, $footer);
 }
 
-// ==== FRAME OVERLAY ====
-if (file_exists($frame)) {
-    $frameImg = imagecreatefrompng($frame);
-    imagecopy($final, $frameImg, 0, 0, 0, 0, imagesx($frameImg), imagesy($frameImg));
-}
+// ==== OVERLAY FRAME (PALING AKHIR) ====
+imagecopy($final, $frameImg, 0, 0, 0, 0, $frameW, $frameH);
 
 // ==== SAVE RESULT ====
 $file = $result."strip_".time().".png";
 imagepng($final, $file);
+
+// ==== CLEAN MEMORY ====
+imagedestroy($img1);
+imagedestroy($img2);
+imagedestroy($img3);
+imagedestroy($frameImg);
+imagedestroy($final);
 
 // ==== RESPONSE ====
 echo json_encode([
