@@ -6,36 +6,51 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 
+
 <style>
+
 body {
-    background:#eee;
+    background: url("photos/assets/bg.png") center / cover no-repeat fixed;
     font-family: Arial;
     text-align:center;
 }
 
+#booth-wrapper {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    margin-top: 30px;
+}
+
+/* KIRI */
 #frame {
     position: relative;
     width: 420px;
-    margin: auto;
 }
 
 #video {
     width: 100%;
-    height: auto;
     border-radius: 20px;
     display: block;
 }
 
-/* FRAME PNG */
-.frame-overlay {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
+/* KANAN */
+#frame-side {
+    position: relative;
+    width: 350px;
 }
 
-/* COUNTER DI ATAS SEMUA */
+/* GAMBAR FRAME */
+.frame-bg {
+    width: 100%;
+    display: block;
+    border-radius: 16px;
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
+}
+
+
+/* COUNTER */
 #counter {
     position: absolute;
     top: 50%;
@@ -47,6 +62,7 @@ body {
 }
 
 
+
 button {
     padding:12px 25px;
     font-size:16px;
@@ -54,10 +70,26 @@ button {
 }
 
 #preview {
-    display:flex;
-    justify-content:center;
-    gap:16px;
-    margin-top:40px;
+    position: absolute;
+
+    /* SESUAIKAN DENGAN LUBANG FRAME */
+    top: 4.5%;
+    left: 10%;
+    width: 80%;
+    height: 72%;
+
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+
+    pointer-events: none;
+}
+
+/* FOTO PREVIEW */
+#preview img {
+    width: 5%;
+    border-radius: 10px;
+    object-fit: cover;
 }
 </style>
 </head>
@@ -65,24 +97,29 @@ button {
 
 <h2>📸 Photo Booth</h2>
 
+<div id="booth-wrapper">
 
-<div id="frame">
-    <!-- VIDEO -->
-    <video id="video" autoplay playsinline></video>
-
-    <!-- FRAME PNG -->
-    <img src="photos/assets/frame.png" class="frame-overlay">
-
-    <!-- COUNTER -->
-    <div id="counter"></div>
-</div>
-
-<canvas id="canvas" style="display:none;"></canvas>
+    <!-- KIRI: VIDEO -->
+    <div id="frame">
+        <video id="video" autoplay playsinline></video>
+        <div id="counter"></div>
+        <canvas id="canvas" style="display:none;"></canvas>
 
 <button id="start">Start Capture</button>
 
-<div id="result" style="margin-top:20px;"></div>
-<div id="preview"></div>
+<div id="result" style="margin-top:50px;"></div>
+
+    </div>
+
+    <!-- KANAN: FRAME PNG -->
+   <div id="frame-side">
+    <img src="photos/assets/frame.png" class="frame-bg">
+
+    <!-- PREVIEW DI DALAM FRAME -->
+    <div id="preview"></div>
+</div>
+
+</div>
 
 <script>
 let captures = [];
@@ -124,30 +161,22 @@ function takePhoto() {
 
     // ✅ PREVIEW + FRAME
     $("#preview").append(`
-        <div style="
-            position:relative;
-            width:180px;
-            aspect-ratio:3 / 4;
-            border-radius:16px;
-            overflow:hidden;
-            box-shadow:0 4px 15px rgba(0,0,0,.35);
+    <div style="
+        width:100%;
+        flex:1;
+        border-radius:12px;
+        overflow:hidden;
+        box-shadow:0 4px 15px rgba(0,0,0,.35);
+    ">
+        <img src="${imgData}" style="
+            width:100%;
+            height:100%;
+            object-fit:cover;
+            display:block;
         ">
-            <img src="${imgData}" style="
-                width:100%;
-                height:100%;
-                object-fit:cover;
-                display:block;
-            ">
+    </div>
+`);
 
-            <img src="photos/assets/frame.png" style="
-                position:absolute;
-                inset:0;
-                width:100%;
-                height:100%;
-                pointer-events:none;
-            ">
-        </div>
-    `);
 
     if (shot < 3) {
         setTimeout(countdownCapture, 1000);
