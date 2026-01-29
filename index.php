@@ -92,8 +92,6 @@ button {
 
 #preview {
     position: absolute;
-
-    /* SESUAIKAN DENGAN LUBANG FRAME */
     top: 4.5%;
     left: 10%;
     width: 80%;
@@ -102,16 +100,45 @@ button {
     display: flex;
     flex-direction: column;
     gap: 13px;
-
-    pointer-events: none;
 }
+
 
 /* FOTO PREVIEW */
 #preview img {
-    width: 5%;
+    width: 100%;
     border-radius: 10px;
     object-fit: cover;
 }
+
+.preview-item {
+    position: relative;
+    flex: 1;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(0,0,0,.35);
+}
+
+.preview-item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.delete-photo {
+    position: absolute;
+    top: 6px;
+    right: 6px;
+    width: 50px;
+    height: 50px;
+    border-radius: 70%;
+    border: none;
+    background: rgba(0, 0, 0, 0.06);
+    color: #fff;
+    cursor: pointer;
+    font-size: 50px;
+    line-height: 26px;
+}
+
 </style>
 </head>
 <body>
@@ -148,6 +175,8 @@ button {
  
 
 <script>
+    
+
  let activeFrame = "photos/assets/frame1.png";
  $(".frame-thumb").on("click", function () {
     activeFrame = $(this).data("frame");
@@ -205,21 +234,13 @@ function takePhoto() {
     shot++;
 
     // ✅ PREVIEW + FRAME
+
    $("#preview").append(`
-    <div style="
-        width:100%;
-        flex:1;
-        border-radius:12px;
-        overflow:hidden;
-        position:relative;
-        box-shadow:0 4px 15px rgba(0,0,0,.35);
-    ">
-        <img src="${imgData}" style="
-            width:100%;
-            height:100%;
-            object-fit:cover;
-        ">
+    <div class="preview-item" data-index="${shot - 1}">
+        <img src="${imgData}">
+        <button class="delete-photo">✖</button>
     </div>
+
 `);
 
 
@@ -273,6 +294,25 @@ $("#start").click(function(){
     $("#preview").html("");
     $("#result").html("");
     countdownCapture();
+});
+
+$(document).on("click", ".delete-photo", function () {
+    const item = $(this).closest(".preview-item");
+    const index = item.data("index");
+
+    // hapus data foto
+    captures.splice(index, 1);
+
+    // hapus preview
+    item.remove();
+
+    // update counter
+    shot--;
+
+    // reset index preview
+    $("#preview .preview-item").each(function (i) {
+        $(this).attr("data-index", i);
+    });
 });
 </script>
 
