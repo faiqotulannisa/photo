@@ -7,19 +7,42 @@ $title  = $_POST['title_text'] ?? 'PHOTO BOOTH';
 $footer = $_POST['footer_text'] ?? '';
 $date   = date("d M Y");
 
+// 🔥 FRAME DARI FE
+$frame  = $_POST['frame'] ?? 'photos/assets/frame1.png';
+
+// ==== WHITELIST FRAME (WAJIB) ====
+$allowedFrames = [
+    "photos/assets/frame1.png",
+    "photos/assets/frame2.png",
+    "photos/assets/frame3.png"
+];
+
+if (!in_array($frame, $allowedFrames)) {
+    echo json_encode([
+        "status" => "error",
+        "message" => "Invalid frame"
+    ]);
+    exit;
+}
+
 // ==== FOLDER ====
 $temp   = "photos/temp/";
 $result = "photos/result/";
-$frame  = "assets/frame.png";
 
 // ==== VALIDASI ====
 if (count($images) !== 3) {
-    echo json_encode(["status"=>"error","message"=>"Images not complete"]);
+    echo json_encode([
+        "status"=>"error",
+        "message"=>"Images not complete"
+    ]);
     exit;
 }
 
 if (!file_exists($frame)) {
-    echo json_encode(["status"=>"error","message"=>"Frame not found"]);
+    echo json_encode([
+        "status" => "error",
+        "message" => "Frame not found"
+    ]);
     exit;
 }
 
@@ -46,7 +69,7 @@ $frameImg = imagecreatefrompng($frame);
 $frameW = imagesx($frameImg);
 $frameH = imagesy($frameImg);
 
-// ==== AREA FOTO (SESUAIKAN DENGAN FIGMA) ====
+// ==== AREA FOTO (SESUAIKAN FRAME) ====
 $photoX = 100;
 $photoY = 200;
 $photoW = $frameW - 200;
@@ -66,7 +89,7 @@ if (file_exists($font)) {
     imagettftext($final, 36, 0, $photoX, 120, $textColor, $font, $title);
 }
 
-// ==== COPY & RESIZE FOTO ====
+// ==== COPY FOTO ====
 imagecopyresampled($final, $img1,
     $photoX, $photoY,
     0, 0,

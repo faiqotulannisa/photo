@@ -41,6 +41,27 @@ body {
     width: 350px;
 }
 
+#frame-selector {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.frame-thumb {
+    width: 60px;
+    cursor: pointer;
+    border-radius: 8px;
+    opacity: .6;
+    border: 3px solid transparent;
+}
+
+.frame-thumb.active {
+    opacity: 1;
+    border-color: #000;
+}
+
+
 /* GAMBAR FRAME */
 .frame-bg {
     width: 100%;
@@ -76,11 +97,11 @@ button {
     top: 4.5%;
     left: 10%;
     width: 80%;
-    height: 72%;
+    height: 59%;
 
     display: flex;
     flex-direction: column;
-    gap: 15px;
+    gap: 13px;
 
     pointer-events: none;
 }
@@ -101,7 +122,7 @@ button {
 
     <!-- KIRI: VIDEO -->
     <div id="frame">
-        <video id="video" autoplay playsinline></video>
+        <video id="video" autoplay playsinline muted></video>
         <div id="counter"></div>
         <canvas id="canvas" style="display:none;"></canvas>
 
@@ -113,24 +134,48 @@ button {
 
     <!-- KANAN: FRAME PNG -->
    <div id="frame-side">
-    <img src="photos/assets/frame.png" class="frame-bg">
+    <img src="photos/assets/frame1.png" class="frame-bg" id="active-frame">
+
+    <div id="frame-selector">
+    <img src="photos/assets/frame1.png" data-frame="photos/assets/frame1.png" class="frame-thumb active">
+    <img src="photos/assets/frame2.png" data-frame="photos/assets/frame2.png" class="frame-thumb">
+    <img src="photos/assets/frame3.png" data-frame="photos/assets/frame3.png" class="frame-thumb">
+    </div>
 
     <!-- PREVIEW DI DALAM FRAME -->
     <div id="preview"></div>
 </div>
-
-</div>
+ 
 
 <script>
+ let activeFrame = "photos/assets/frame1.png";
+ $(".frame-thumb").on("click", function () {
+    activeFrame = $(this).data("frame");
+
+    $("#active-frame").attr("src", activeFrame);
+
+    $(".frame-thumb").removeClass("active");
+    $(this).addClass("active");
+});
+  
 let captures = [];
 let shot = 0;
+
 
 const video = document.getElementById("video");
 const canvas = document.getElementById("canvas");
 
 // 🎥 CAMERA
-navigator.mediaDevices.getUserMedia({ video:true })
-.then(stream => video.srcObject = stream);
+navigator.mediaDevices.getUserMedia({ video: true })
+.then(stream => {
+    video.srcObject = stream;
+    video.play();
+})
+.catch(err => {
+    alert("Camera error: " + err.message);
+    console.error(err);
+});
+
 
 // ⏱ COUNTDOWN
 function countdownCapture() {
@@ -160,19 +205,19 @@ function takePhoto() {
     shot++;
 
     // ✅ PREVIEW + FRAME
-    $("#preview").append(`
+   $("#preview").append(`
     <div style="
         width:100%;
         flex:1;
         border-radius:12px;
         overflow:hidden;
+        position:relative;
         box-shadow:0 4px 15px rgba(0,0,0,.35);
     ">
         <img src="${imgData}" style="
             width:100%;
             height:100%;
             object-fit:cover;
-            display:block;
         ">
     </div>
 `);
@@ -187,36 +232,38 @@ function takePhoto() {
 
 // ⬆️ UPLOAD STRIP
 function uploadStrip() {
-    $.ajax({
-        url: "upload-strip.php",
-        type: "POST",
-        dataType: "json",
-        data: {
-            images: captures,
-            title_text: "PHOTO BOOTH",
-            footer_text: "#MyEvent"
-        },
-        success: function(res) {
-            if (res.status === "success") {
-                $("#result").html(`
-                    <h3>Hasil Foto</h3>
-                    <img src="${res.file}" style="
-                        width:240px;
-                        border-radius:10px;
-                        box-shadow:0 4px 20px rgba(0,0,0,.3)
-                    ">
-                    <br><br>
-                    <a href="${res.file}" download>⬇️ Download</a>
-                `);
-            } else {
-                $("#result").html("❌ Gagal membuat foto");
-            }
-        },
-        error: function(xhr) {
-            $("#result").html("❌ Error server");
-            console.error(xhr.responseText);
+   $.ajax({
+    url: "upload-strip.php",
+    type: "POST",
+    dataType: "json",
+    data: {
+        images: captures,
+        frame: activeFrame,
+        title_text: "PHOTO BOOTH",
+        footer_text: "#MyEvent"
+    },
+    success: function(res) {
+        if (res.status === "success") {
+            $("#result").html(`
+                <h3>Hasil Foto</h3>
+                <img src="${res.file}" style="
+                    width:240px;
+                    border-radius:10px;
+                    box-shadow:0 4px 20px rgba(0,0,0,.3)
+                ">
+                <br><br>
+                <a href="${res.file}" download>⬇️ Download</a>
+            `);
+        } else {
+            $("#result").html("❌ Gagal membuat foto");
         }
-    });
+    },
+    error: function(xhr) {
+        console.error(xhr.responseText);
+        $("#result").html("❌ Error server");
+    }
+});
+
 }
 
 // ▶️ START
