@@ -139,6 +139,52 @@ button {
     line-height: 26px;
 }
 
+#filter-panel {
+    margin-top: 15px;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.filter-btn {
+    padding: 6px 12px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    background: #fff;
+    font-size: 14px;
+}
+
+.filter-btn.active {
+    background: #000;
+    color: #fff;
+}
+
+/* VIDEO & PREVIEW kena filter */
+.filtered {
+    filter: var(--filter);
+}
+
+/* BEAUTY FILTER PRESET */
+.beauty-soft {
+    filter: blur(0.8px) brightness(105%) contrast(105%) saturate(110%);
+}
+
+.beauty-bright {
+    filter: brightness(115%) contrast(105%) saturate(115%);
+}
+
+.beauty-glow {
+    filter: brightness(110%) contrast(100%) saturate(120%)
+            drop-shadow(0 0 6px rgba(255,255,255,.35));
+}
+
+.beauty-bw {
+    filter: grayscale(100%) brightness(110%) contrast(110%);
+}
+
+
 </style>
 </head>
 <body>
@@ -154,6 +200,16 @@ button {
         <canvas id="canvas" style="display:none;"></canvas>
 
 <button id="start">Start Capture</button>
+
+<div id="filter-panel">
+    <button class="filter-btn active" data-filter="none">Normal</button>
+    <button class="filter-btn" data-filter="beauty-soft">Soft Beauty</button>
+    <button class="filter-btn" data-filter="beauty-bright">Bright Beauty</button>
+    <button class="filter-btn" data-filter="beauty-glow">Glow</button>
+    <button class="filter-btn" data-filter="beauty-bw">B&W Smooth</button>
+</div>
+
+
 
 <div id="result" style="margin-top:50px;"></div>
 
@@ -175,6 +231,19 @@ button {
  
 
 <script>
+
+let activeFilterClass = "none";
+
+$(".filter-btn").on("click", function () {
+    activeFilterClass = $(this).data("filter");
+
+    $(".filter-btn").removeClass("active");
+    $(this).addClass("active");
+
+    // reset class
+    $("#video").removeClass().addClass(activeFilterClass);
+});
+
     
 
  let activeFrame = "photos/assets/frame1.png";
@@ -223,26 +292,48 @@ function countdownCapture() {
     }, 1000);
 }
 
+function applyCanvasFilter(ctx) {
+    switch (activeFilterClass) {
+        case "beauty-soft":
+            ctx.filter = "blur(0.8px) brightness(105%) contrast(105%) saturate(110%)";
+            break;
+
+        case "beauty-bright":
+            ctx.filter = "brightness(115%) contrast(105%) saturate(115%)";
+            break;
+
+        case "beauty-glow":
+            ctx.filter = "brightness(110%) contrast(100%) saturate(120%)";
+            break;
+
+        case "beauty-bw":
+            ctx.filter = "grayscale(100%) brightness(110%) contrast(110%)";
+            break;
+
+        default:
+            ctx.filter = "none";
+    }
+}
+
 // 📸 TAKE PHOTO
 function takePhoto() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
-    canvas.getContext("2d").drawImage(video,0,0);
+    const ctx = canvas.getContext("2d");
+
+    applyCanvasFilter(ctx);
+    ctx.drawImage(video, 0, 0);
 
     const imgData = canvas.toDataURL("image/png");
     captures.push(imgData);
     shot++;
 
-    // ✅ PREVIEW + FRAME
-
-   $("#preview").append(`
-    <div class="preview-item" data-index="${shot - 1}">
-        <img src="${imgData}">
-        <button class="delete-photo">✖</button>
-    </div>
-
-`);
-
+    $("#preview").append(`
+        <div class="preview-item" data-index="${shot - 1}">
+            <img src="${imgData}">
+            <button class="delete-photo">✖</button>
+        </div>
+    `);
 
     if (shot < 3) {
         setTimeout(countdownCapture, 1000);
@@ -250,6 +341,7 @@ function takePhoto() {
         uploadStrip();
     }
 }
+
 
 // ⬆️ UPLOAD STRIP
 function uploadStrip() {
