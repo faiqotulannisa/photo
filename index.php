@@ -344,39 +344,47 @@ function takePhoto() {
 
 
 // ⬆️ UPLOAD STRIP
+// ⬆️ UPLOAD STRIP
 function uploadStrip() {
-   $.ajax({
-    url: "upload-strip.php",
-    type: "POST",
-    dataType: "json",
-    data: {
-        images: captures,
-        frame: activeFrame,
-        title_text: "PHOTO BOOTH",
-        footer_text: "#MyEvent"
-    },
-    success: function(res) {
-        if (res.status === "success") {
-            $("#result").html(`
-                <h3>Hasil Foto</h3>
-                <img src="${res.file}" style="
-                    width:240px;
-                    border-radius:10px;
-                    box-shadow:0 4px 20px rgba(0,0,0,.3)
-                ">
-                <br><br>
-                <a href="${res.file}" download>⬇️ Download</a>
-            `);
-        } else {
-            $("#result").html("❌ Gagal membuat foto");
-        }
-    },
-    error: function(xhr) {
-        console.error(xhr.responseText);
-        $("#result").html("❌ Error server");
-    }
-});
+    $.ajax({
+        url: "upload-strip.php",
+        type: "POST",
+        dataType: "json",
+        data: {
+            images: captures,
+            frame: activeFrame,
+            title_text: "PHOTO BOOTH",
+            footer_text: "#MyEvent"
+        },
+        success: function(res) {
+            if (res.status === "success") {
+                $("#result").html(`
+                    <h3>Hasil Foto</h3>
 
+                    <a href="${res.drive_link}" target="_blank"
+                       style="font-size:18px;font-weight:bold">
+                       📁 Buka di Google Drive
+                    </a>
+
+                    <br><br>
+
+                    <iframe
+                        src="${res.drive_link.replace('/view','/preview')}"
+                        width="240"
+                        height="420"
+                        style="border:none;border-radius:12px;
+                               box-shadow:0 4px 15px rgba(0,0,0,.3)">
+                    </iframe>
+                `);
+            } else {
+                $("#result").html("❌ Upload gagal");
+            }
+        },
+        error: function(xhr) {
+            console.error(xhr.responseText);
+            $("#result").html("❌ Error server");
+        }
+    });
 }
 
 // ▶️ START
