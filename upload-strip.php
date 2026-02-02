@@ -46,20 +46,27 @@ foreach ($images as $img64) {
 }
 
 // ================= FRAME PNG =================
-if ($frame && file_exists($frame)) {
-    $frameImg = imagecreatefrompng($frame);
-    imagecopyresampled(
-        $strip, $frameImg,
-        0, 0, 0, 0,
-        $width, $height,
-        imagesx($frameImg), imagesy($frameImg)
-    );
-    imagedestroy($frameImg);
+if ($frame) {
+    $framePath = __DIR__ . "/" . ltrim($frame, "/");
+
+    if (file_exists($framePath)) {
+        $frameImg = imagecreatefrompng($framePath);
+        imagecopyresampled(
+            $strip,
+            $frameImg,
+            0, 0, 0, 0,
+            $width, $height,
+            imagesx($frameImg),
+            imagesy($frameImg)
+        );
+        imagedestroy($frameImg);
+    }
 }
+
 
 // ================= TEXT =================
 $textColor = imagecolorallocate($strip, 255,255,255);
-$font = __DIR__ . "/fonts/arial.ttf"; // WAJIB ADA
+$font = __DIR__ . "/assets/arial.ttf"; // WAJIB ADA
 
 imagettftext($strip, 36, 0, 80, 80, $textColor, $font, $title);
 imagettftext($strip, 24, 0, 80, $height - 40, $textColor, $font, $footer);
@@ -71,7 +78,7 @@ imagedestroy($strip);
 
 // ================= GOOGLE DRIVE =================
 $client = new Client();
-$client->setAuthConfig("credentials.json");
+$client->setAuthConfig(__DIR__ . "/credentials.json");
 $client->addScope(Drive::DRIVE);
 
 $service = new Drive($client);
