@@ -228,8 +228,10 @@ button {
     <!-- PREVIEW DI DALAM FRAME -->
     <div id="preview"></div>
 </div>
- 
 
+ <div id="loading" style="display:none;font-size:18px;">
+⏳ Uploading ke Google Drive...
+</div>
 <script>
 
 let activeFilterClass = "none";
@@ -243,6 +245,7 @@ $(".filter-btn").on("click", function () {
     // reset class
     $("#video").removeClass().addClass(activeFilterClass);
 });
+
 
     
 
@@ -343,9 +346,11 @@ function takePhoto() {
 }
 
 
-// ⬆️ UPLOAD STRIP
+
 // ⬆️ UPLOAD STRIP
 function uploadStrip() {
+    $("#loading").show();
+
     $.ajax({
         url: "upload-strip.php",
         type: "POST",
@@ -357,35 +362,24 @@ function uploadStrip() {
             footer_text: "#MyEvent"
         },
         success: function(res) {
+            $("#loading").hide();
+
             if (res.status === "success") {
                 $("#result").html(`
                     <h3>Hasil Foto</h3>
-
-                    <a href="${res.drive_link}" target="_blank"
-                       style="font-size:18px;font-weight:bold">
-                       📁 Buka di Google Drive
-                    </a>
-
-                    <br><br>
-
-                    <iframe
-                        src="${res.drive_link.replace('/view','/preview')}"
-                        width="240"
-                        height="420"
-                        style="border:none;border-radius:12px;
-                               box-shadow:0 4px 15px rgba(0,0,0,.3)">
-                    </iframe>
+                    <a href="${res.drive_link}" target="_blank">📁 Buka di Google Drive</a>
                 `);
             } else {
                 $("#result").html("❌ Upload gagal");
             }
         },
-        error: function(xhr) {
-            console.error(xhr.responseText);
+        error: function() {
+            $("#loading").hide();
             $("#result").html("❌ Error server");
         }
     });
 }
+
 
 // ▶️ START
 $("#start").click(function(){
