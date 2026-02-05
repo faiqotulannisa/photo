@@ -1,12 +1,9 @@
 <?php
+require __DIR__ . '/vendor/autoload.php';
 
-error_reporting(0);
-header('Content-Type: application/json');
-ini_set('display_errors', 1);
-
-/* =========================================================
-   PHOTO BOOTH STRIP - SAVE TO LOCAL
-   ========================================================= */
+use Google\Client;
+use Google\Service\Drive;
+use Google\Service\Drive\DriveFile;
 
 header("Content-Type: application/json");
 
@@ -32,27 +29,27 @@ if (count($images) !== 3) {
     exit;
 }
 
-/* ================= STRIP SIZE ================= */
+
+/* ================= STRIP SIZE (DINAMIS) ================= */
 $width        = 900;
-$photoHeight  = 450;
+$photoHeight = 450;
 $gap          = 30;
 $titleSpace   = 160;
 $footerSpace  = 100;
 
 $height = $titleSpace + (count($images) * ($photoHeight + $gap)) + $footerSpace;
 
-/* ================= CREATE CANVAS ================= */
 $strip = imagecreatetruecolor($width, $height);
 imagesavealpha($strip, true);
 $transparent = imagecolorallocatealpha($strip, 0, 0, 0, 127);
 imagefill($strip, 0, 0, $transparent);
 
-/* ================= PLACE PHOTOS ================= */
+/* ================= FOTO ================= */
 $y = $titleSpace;
 
 foreach ($images as $img64) {
 
-    if (strlen($img64) > 6_000_000) continue;
+    if (strlen($img64) > 6_000_000) continue; // limit size
 
     $imgData = base64_decode(
         preg_replace('#^data:image/\w+;base64,#', '', $img64)
@@ -68,8 +65,7 @@ foreach ($images as $img64) {
         $img,
         50, $y,
         0, 0,
-        $width - 100,
-        $photoHeight,
+        $width - 100, $photoHeight,
         imagesx($img),
         imagesy($img)
     );
@@ -78,7 +74,7 @@ foreach ($images as $img64) {
     $y += $photoHeight + $gap;
 }
 
-/* ================= FRAME ================= */
+/* ================= FRAME PNG ================= */
 if ($frame) {
     $framePath = __DIR__ . "/" . ltrim($frame, "/");
     if (file_exists($framePath)) {
@@ -87,15 +83,13 @@ if ($frame) {
             $strip,
             $frameImg,
             0, 0, 0, 0,
-            $width,
-            $height,
+            $width, $height,
             imagesx($frameImg),
             imagesy($frameImg)
         );
         imagedestroy($frameImg);
     }
 }
-
 /* ================= FONT ================= */
 $font = __DIR__ . "/photos/assets/arial.ttf";
 
@@ -105,32 +99,57 @@ if (!file_exists($font)) {
         "msg" => "Font not found",
         "path" => $font
     ]);
-    imagedestroy($strip);
     exit;
 }
 
 /* ================= TEXT ================= */
 $textColor = imagecolorallocate($strip, 255, 255, 255);
-imagettftext($strip, 36, 0, 60, 90,  $textColor, $font, $title);
+imagettftext($strip, 36, 0, 60, 80, $textColor, $font, $title);
 imagettftext($strip, 22, 0, 60, $height - 40, $textColor, $font, $footer);
 
-/* ================= SAVE TO LOCAL ================= */
-$saveDir = __DIR__ . "/output";
-
-if (!is_dir($saveDir)) {
-    mkdir($saveDir, 0777, true);
-}
-
-$fileName = "PhotoBooth_" . date("Ymd_His") . ".png";
-$filePath = $saveDir . "/" . $fileName;
-
-imagepng($strip, $filePath);
+/* ================= SAVE TEMP ================= */
+$tmpFile = sys_get_temp_dir() . "/photobooth_" . uniqid() . ".png";
+imagepng($strip, $tmpFile);
 imagedestroy($strip);
+
+/* ================= GOOGLE DRIVE ================= */
+$client = new Client();
+$client->setAuthConfig(__DIR__ . "/credentials.json");
+$client->addScope(Drive::DRIVE);
+$client->setAccessType('offline');
+
+$service = new Drive($client);
+
+$fileMetadata = new DriveFile([
+    'name' => 'PhotoBooth_' . date('Ymd_His') . '.png',
+    'parents' => ['1_TCvYGVCsLwroi5JrPv2noej4FOG8RYu']
+]);
+
+
+$file = $service->files->create(
+    $fileMetadata,
+    [
+        'data' => file_get_contents($tmpFile),
+        'mimeType' => 'image/png',
+        'uploadType' => 'multipart',
+        'fields' => 'id',
+        'supportsAllDrives' => true
+    ]
+);
+
+// public access
+$service->permissions->create($file->id, [
+    'type' => 'anyone',
+    'role' => 'reader'
+    ],
+    ['supportsAllDrives' => true]
+);
+
+unlink($tmpFile);
 
 /* ================= RESPONSE ================= */
 echo json_encode([
-    "status"    => "success",
-    "file_name" => $fileName,
-    "path"      => $filePath
+    "status" => "success",
+    "file_id" => $file->id,
+    "drive_link" => "https://drive.google.com/file/d/{$file->id}/view"
 ]);
-exit;
