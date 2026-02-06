@@ -307,7 +307,7 @@ function uploadStrip(){
             }
 
             const imageUrl =
-                window.location.origin + "/photo/output/" + res.file_name;
+                window.location.origin + "/output/" + res.file_name;
 
             $("#result").html(`
                 <h3>📸 Hasil Foto</h3>
