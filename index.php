@@ -179,6 +179,8 @@ button {
         <canvas id="canvas" style="display:none;"></canvas>
 
         <button id="start">Start Capture</button>
+        <button id="reset">Reset All</button>
+
 
         <div id="filter-panel">
             <button class="filter-btn active" data-filter="none">Normal</button>
@@ -273,15 +275,54 @@ function takePhoto(){
     captures.push(img);
 
     $("#preview").append(`
-        <div class="preview-item">
+        <div class="preview-item" data-index="${captures.length - 1}">
             <img src="${img}">
             <button class="delete-photo">✖</button>
         </div>
     `);
 
     shot++;
-    shot < 3 ? setTimeout(countdown, 800) : uploadStrip();
+
+    if (captures.length < 3) {
+        setTimeout(countdown, 800);
+    } else {
+        uploadStrip();
+    }
 }
+
+/* DELETE PHOTO */
+$("#preview").on("click", ".delete-photo", function () {
+    const item = $(this).closest(".preview-item");
+    const index = item.data("index");
+
+    captures.splice(index, 1);
+    item.remove();
+    shot--;
+
+    // reindex ulang
+    $("#preview .preview-item").each(function (i) {
+        $(this).attr("data-index", i);
+    });
+});
+
+/* RESET ALL */
+$("#reset").click(function(){
+    captures = [];
+    shot = 0;
+    $("#preview, #result, #qr-result").empty();
+});
+
+/* START */
+$("#start").click(function(){
+
+    if (captures.length >= 3) {
+        alert("Sudah 3 foto. Hapus salah satu untuk ambil ulang 📸");
+        return;
+    }
+
+    shot = captures.length;
+    countdown();
+});
 
 /* UPLOAD + QR */
 function uploadStrip(){
@@ -298,7 +339,6 @@ function uploadStrip(){
             footer_text: "#MyEvent"
         },
         success: function(res){
-
             $("#loading").hide();
 
             if (res.status !== "success") {
@@ -311,12 +351,11 @@ function uploadStrip(){
 
             $("#result").html(`
                 <h3>📸 Hasil Foto</h3>
-                <img src="${imageUrl}" style="width:280px;border-radius:12px">
+                <img src="${imageUrl}" style="width:280px;height:200px;border-radius:12px">
                 <p>Scan QR untuk download</p>
             `);
 
             $("#qr-result").empty();
-
             new QRCode(document.getElementById("qr-result"), {
                 text: imageUrl,
                 width: 200,
@@ -326,22 +365,12 @@ function uploadStrip(){
         },
         error: function(xhr){
             $("#loading").hide();
-            console.error(xhr.responseText);
             alert("Server error");
+            console.error(xhr.responseText);
         }
     });
 }
-
-/* START */
-$("#start").click(function(){
-    captures = [];
-    shot = 0;
-    $("#preview, #result, #qr-result").empty();
-    $("#video").removeClass();
-    countdown();
-});
 </script>
-
 
 </body>
 </html>
