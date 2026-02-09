@@ -56,7 +56,7 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     font-size: 70px;
-    color: red;
+    color: white;
     font-weight: bold;
 }
 
@@ -351,7 +351,7 @@ function uploadStrip(){
 
             $("#result").html(`
                 <h3>📸 Hasil Foto</h3>
-                <img src="${imageUrl}" style="width:280px;height:200px;border-radius:12px">
+                <img src="${imageUrl}" style="width:280px;height:700px;border-radius:12px">
                 <p>Scan QR untuk download</p>
             `);
 
