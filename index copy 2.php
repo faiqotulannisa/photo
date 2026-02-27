@@ -46,7 +46,7 @@ body {
 .frame-bg {
     width: 100%;
     border-radius: 16px;
-    box-shadow: 0 4px 20px rgba(255, 187, 187, 0.88);
+    box-shadow: 0 4px 20px rgba(0,0,0,.3);
 }
 
 /* COUNTER */
@@ -61,49 +61,13 @@ body {
 }
 
 /* BUTTON */
-body {
-  font-family: Arial, sans-serif;
-  text-align: center;
-  margin-top: 50px;
-}
-
-/* Style umum tombol */
 button {
-  padding: 12px 24px;
-  font-size: 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  margin: 10px;
-  transition: all 0.3s ease;
+    padding: 12px 25px;
+    font-size: 16px;
+    margin-top: 10px;
+    cursor: pointer;
 }
 
-/* Tombol Start */
-#start {
-  background-color: #a72881;
-  color: white;
-}
-
-#start:hover {
-  background-color: #a72881;
-  transform: scale(1.05);
-}
-
-/* Tombol Reset */
-#reset {
-  background-color: #a72881;
-  color: white;
-}
-
-#reset:hover {
-  background-color: #a72881;
-  transform: scale(1.05);
-}
-
-/* Efek klik */
-button:active {
-  transform: scale(0.95);
-}
 /* PREVIEW */
 #preview {
     position: absolute;
@@ -121,9 +85,8 @@ button:active {
     flex: 1;
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 1px 1px rgba(250, 212, 212, 0.95);
+    box-shadow: 0 4px 15px rgba(0,0,0,.35);
 }
-
 
 .preview-item img {
     width: 100%;
@@ -200,24 +163,12 @@ button:active {
     opacity: 1;
     border-color: #000;
 }
-
-h2 {
-  font-family: 'Courier New', monospace;
-  font-size: 40px;
-  text-align: center;
-  color: #fff;
-  text-shadow: 
-    0 0 5px #ff00ff,
-    0 0 10px #ff00ff,
-    0 0 20px #ff00ff,
-    0 0 40px #ff00ff;
-}
 </style>
 </head>
 
 <body>
 
-<h2>Photo Booth</h2>
+<h2>📸 Photo Booth</h2>
 
 <div id="booth-wrapper">
 
@@ -239,6 +190,7 @@ h2 {
             <button class="filter-btn" data-filter="beauty-bw">B&W</button>
         </div>
 
+        <div id="result" style="margin-top:40px;"></div>
     </div>
 
     <!-- KANAN -->
@@ -249,7 +201,6 @@ h2 {
             <img src="photos/assets/frame1.png" data-frame="photos/assets/frame1.png" class="frame-thumb active">
             <img src="photos/assets/frame2.png" data-frame="photos/assets/frame2.png" class="frame-thumb">
             <img src="photos/assets/frame3.png" data-frame="photos/assets/frame3.png" class="frame-thumb">
-            <img src="photos/assets/frame3.png" data-frame="photos/assets/frame4.png" class="frame-thumb">
         </div>
 
         <div id="preview"></div>
@@ -326,6 +277,7 @@ function takePhoto(){
     $("#preview").append(`
         <div class="preview-item" data-index="${captures.length - 1}">
             <img src="${img}">
+            <button class="delete-photo">✖</button>
         </div>
     `);
 
@@ -339,7 +291,7 @@ function takePhoto(){
 }
 
 /* DELETE PHOTO */
-$("#preview").on("click", ".delete-photo", function () {
+//$("#preview").on("click", ".delete-photo", function () {
     const item = $(this).closest(".preview-item");
     const index = item.data("index");
 
@@ -351,7 +303,7 @@ $("#preview").on("click", ".delete-photo", function () {
     $("#preview .preview-item").each(function (i) {
         $(this).attr("data-index", i);
     });
-});
+//});
 
 /* RESET ALL */
 $("#reset").click(function(){
