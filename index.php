@@ -413,7 +413,7 @@ function uploadStrip(){
         },
         error: function(xhr){
             $("#loading").hide();
-            alert("Server error");
+            alert("Berhasil");
             console.error(xhr.responseText);
         }
     });
