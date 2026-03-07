@@ -8,6 +8,8 @@
 
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="html2canvas.min.js"></script>
+<script src="FileSaver.min.js"></script>
 
 
 <style>
@@ -127,7 +129,7 @@ button:active {
 
 .preview-item img {
     width: 100%;
-    height: 100%;
+    height: auto;
     object-fit: cover;
 }
 
@@ -229,6 +231,7 @@ h2 {
 
         <button id="start">Start Capture</button>
         <button id="reset">Reset All</button>
+        <button id="save">Save</button>
 
 
         <div id="filter-panel">
@@ -243,7 +246,11 @@ h2 {
 
     <!-- KANAN -->
     <div id="frame-side">
-        <img src="photos/assets/frame1.png" class="frame-bg" id="active-frame">
+        <div id ="downloadable">
+            <img src="photos/assets/frame1.png" class="frame-bg" id="active-frame">
+
+            <div id="preview"></div>
+        </div>
 
         <div id="frame-selector">
             <img src="photos/assets/frame1.png" data-frame="photos/assets/frame1.png" class="frame-thumb active">
@@ -251,8 +258,6 @@ h2 {
             <img src="photos/assets/frame3.png" data-frame="photos/assets/frame3.png" class="frame-thumb">
             <img src="photos/assets/frame3.png" data-frame="photos/assets/frame4.png" class="frame-thumb">
         </div>
-
-        <div id="preview"></div>
     </div>
 </div>
 
@@ -360,6 +365,11 @@ $("#reset").click(function(){
     $("#preview, #result, #qr-result").empty();
 });
 
+/* RESET ALL */
+$("#save").click(function(){
+    generate_pdf();
+});
+
 /* START */
 $("#start").click(function(){
 
@@ -418,6 +428,16 @@ function uploadStrip(){
         }
     });
 }
+
+function generate_pdf() {
+  $("#mini_print_button").css("display","none");
+  html2canvas(document.querySelector('#downloadable')).then(canvas => {
+    var data_url = canvas.toDataURL('image/png');
+    saveAs(data_url, "photobooth.jpg");
+    $("#mini_print_button").css("display","inline-block");
+  });
+}
+
 </script>
 
 </body>
